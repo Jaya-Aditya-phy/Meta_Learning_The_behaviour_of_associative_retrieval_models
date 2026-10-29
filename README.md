@@ -95,17 +95,17 @@ produces. They are not the case-study results above.*
 
 | | |
 |---|---|
-| ![collapse](docs/figures/fig2_collapse.png) | ![nested](docs/figures/fig5_nested_cv.png) |
+| ![collapse](fig2_collapse.png) | ![nested](fig5_nested_cv.png) |
 | `bridge`: diagnostics against `n_eff` | `nested`: honest vs optimistic accuracy |
-| ![recalibration](docs/figures/fig7_recalibration.png) | ![policy](docs/figures/fig9_neff_policy.png) |
+| ![recalibration](fig7_recalibration.png) | ![policy](fig9_neff_policy.png) |
 | `recalibrate`: where the uncertainty fails | `neff-policy`: one target instead of two knobs |
 
 <details><summary>More demo figures</summary>
 
-![scaling](docs/figures/fig6_scaling_law.png)
-![correction scaling](docs/figures/fig8_correction_scaling.png)
-![landscape](docs/figures/fig10_density_landscape.png)
-![grounding](docs/figures/fig12_physical_grounding.png)
+![scaling](fig6_scaling_law.png)
+![correction scaling](fig8_correction_scaling.png)
+![landscape](fig10_density_landscape.png)
+![grounding](fig12_physical_grounding.png)
 </details>
 
 ## Validation protocol
