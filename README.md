@@ -156,5 +156,5 @@ If you use this code, please cite it (see [`CITATION.cff`](CITATION.cff)).
 ## Data and acknowledgements
 
 The case-study data come from an ongoing experimental project and are not included. Kish's effective sample size and
-the kNN / kernel-regression literature on which this builds are credited in [`docs/METHODS.md`](docs/METHODS.md).
+the kNN / kernel-regression literature on which this builds are credited in [`METHODS.md`](METHODS.md).
 
