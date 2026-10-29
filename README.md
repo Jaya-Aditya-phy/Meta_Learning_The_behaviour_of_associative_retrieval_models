@@ -58,8 +58,8 @@ model to generalise across.
 | `landscape` | What does the model's density / energy landscape look like? | `fig10`, `fig11` |
 | `grounding` | Does model behaviour track physical variables, or just data coverage? | `fig12` |
 
-Definitions, formulas and validation details are in [`docs/METHODS.md`](docs/METHODS.md); a page-per-figure guide is
-in [`docs/FIGURES.md`](docs/FIGURES.md) and [`docs/figure_report/`](docs/figure_report/).
+Definitions, formulas and validation details are in [`METHODS.md`](METHODS.md); a page-per-figure guide is
+in [`FIGURES.md`](FIGURES.md) and [`figure_report/`](figure_report/).
 
 ## Results on the droplet case study
 
