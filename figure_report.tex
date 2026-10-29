@@ -1,0 +1,314 @@
+% Detailed one-page report per figure (+ one setup page).  Compile:  pdflatex report_figures_detailed.tex
+% Put the PNGs in figs/ (names unchanged):
+%   layer1_outputs: fig1_neff_heatmap fig2_collapse fig3_entropy_vs_neff fig4_variance_law
+%   layer2_outputs: fig5_nested_cv   layer3_outputs: fig6_scaling_law   layer2b_outputs: fig7_recalibration
+%   layer3b_outputs: fig8_correction_scaling   layer2c_outputs: fig9_neff_policy
+%   landscape_outputs: fig10_density_landscape fig11_energy_surface_3d   layer4_outputs: fig12_physical_grounding
+% A missing figure is drawn as a grey placeholder, so the file always compiles.
+\documentclass[10pt,a4paper]{article}
+\usepackage[a4paper,margin=13mm,top=11mm,bottom=13mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\usepackage{courier}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{amsmath,amssymb,sansmath}
+\usepackage{graphicx,xcolor,enumitem,array,multicol}
+\pagestyle{plain}
+\setlength{\parindent}{0pt}\setlength{\parskip}{0pt}\setlength{\columnsep}{6mm}
+\setlist[itemize]{nosep,leftmargin=3.5mm,topsep=0.4mm}
+\definecolor{gmain}{HTML}{1B7F4B}\definecolor{gsup}{HTML}{B8620B}\definecolor{gapp}{HTML}{666666}
+\definecolor{gneg}{HTML}{B3261E}\definecolor{gfix}{HTML}{1F5FA8}\definecolor{softgrey}{HTML}{F2F2F2}
+\newcommand{\neff}{n_{\mathrm{eff}}}
+\newcommand{\fh}{62mm}
+\newcommand{\figbox}[3]{\IfFileExists{figs/#1}{\includegraphics[width=#2,height=#3,keepaspectratio]{figs/#1}}{\fcolorbox{gray}{softgrey}{\parbox[c][#3][c]{#2}{\centering\textit{\detokenize{figs/#1}}\\[1mm]\footnotesize(figure missing)}}}}
+\newcommand{\sect}[1]{\par\smallskip\noindent\textbf{\color{black!85}#1}\ }
+\newenvironment{figpage}[4]{%
+ \noindent{\Large\bfseries #2}\par\vspace{0.5mm}
+ {\scriptsize\color{gray}#3}\hfill{\small\bfseries #4}\par\vspace{0.5mm}\hrule\vspace{1.5mm}
+ \begin{center}\figbox{#1}{\linewidth}{\fh}\end{center}\vspace{-2.5mm}
+ \fontsize{8.5}{10.2}\selectfont}{\clearpage}
+
+\begin{document}\sansmath
+
+% ================================================================== SETUP PAGE
+\noindent{\Large\bfseries Figure-by-figure report: retrieval inference for droplet deposits}\par\vspace{0.5mm}
+{\scriptsize\color{gray}Setup, definitions and index. Every figure page that follows assumes this page.}\par\vspace{0.5mm}\hrule\vspace{1.5mm}
+\fontsize{8.8}{10.6}\selectfont
+\begin{multicols}{2}
+\sect{Data.} 142 evaporated colloidal droplets from 32 experimental batches (173 before restricting concentration to $(0.002,1.0]$ w/v). Each deposit is a 40-dimensional morphology vector: 20 descriptors from the centre tile plus their averages over the north, south, east and west tiles. The target is $y=\log_{10}$ of the glycerol-adjusted concentration $c\,(1-\text{glycerol}\%/100)$; glycerol is not an input.
+\sect{Model (Layer 0).} Features are median-imputed and standardised on the training set; features with $|\mathrm{corr}|<0.4$ with the target (training rows only) are dropped. Retrieval weights are $w_i\propto e^{-\beta d_i/s}$ over the $k$ nearest stored droplets, with $d_i$ the Euclidean distance and $s$ the median nearest-neighbour distance of the training set, so $\beta$ is dimensionless. The prediction is $\hat y=\sum_i w_iy_i$ and the uncertainty is the weighted spread $\sigma=\bigl(\sum_i w_i(y_i-\hat y)^2\bigr)^{1/2}$, floored at 5\% of the training label spread.
+\sect{Effective sample size.} $\neff=1/\sum_i w_i^2$ (Kish's effective sample size for normalised weights). It equals $k$ for equal votes and 1 when one droplet takes all the weight.
+\sect{Validation.} Leave-one-experimental-group-out (LOEGO): each of the 32 batches is held out in turn. Any setting that is tuned is chosen by an inner GroupKFold on the remaining batches only (nested). Confidence intervals resample whole batches, the unit of generalisation.
+\sect{Metrics.} $R^2$ and MAE on $\log_{10}$ concentration, pooled over folds. $z=(\hat y-y)/\sigma$. Coverage-68/95: share of true values with $|z|\le1$ or $\le1.96$ (ideal 0.68, 0.95). Gaussian NLL $=\overline{\tfrac12\ln(2\pi\sigma^2)+(\hat y-y)^2/2\sigma^2}$ (lower is better; depends on the uncertainty floor, so coverage is quoted first). Mean $z^2$ has ideal value 1.
+\sect{Corrections.} \emph{Sigma:} one factor $s=\sqrt{\overline{z^2}}\in[0.5,5]$ multiplies every $\sigma$. \emph{Bias:} $y\approx a+b\hat y$. Both are fitted on inner out-of-fold predictions only.
+\sect{Reading the use tags.} \textbf{\color{gmain}main}: put on Poster B. \textbf{\color{gsup}supporting/optional}: space permitting. \textbf{\color{gapp}appendix}: keep out of the poster. \textbf{\color{gneg}negative result}: one line only. \textbf{\color{gfix}needs a rerun}: no real-data numbers yet.
+\columnbreak
+\sect{Index of figures.}\par\smallskip
+{\footnotesize\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}rp{29mm}p{24mm}l@{}}\hline
+\# & Content & Script & Use\\\hline
+1 & $\neff$ over $(k,\beta)$ & layer1 & {\color{gsup}supporting}\\
+2 & metrics collapse on $\neff$ & layer1 & {\color{gmain}hero}\\
+3 & entropy vs $\neff$ & layer1 & {\color{gapp}appendix}\\
+4 & failed variance law & layer1 & {\color{gneg}negative}\\
+5 & nested vs best-of-grid & layer2 & {\color{gmain}main}\\
+6 & scaling with data size & layer3 & {\color{gsup}optional}\\
+7 & where uncertainty fails & layer2b & {\color{gmain}main}\\
+8 & corrections vs data size & layer3b & {\color{gsup}supporting}\\
+9 & target-$\neff$ policy & layer2c & {\color{gsup}supporting}\\
+10 & density landscape & landscape & {\color{gfix}rerun}\\
+11 & 3-D energy surface & landscape & {\color{gfix}rerun}\\
+12 & physical grounding & layer4 & {\color{gsup}limitation}\\\hline\end{tabular}}
+\sect{Headline findings in one paragraph.} Retrieval matches a density-weighted kNN baseline on accuracy ($R^2\approx0.80$ under nested leave-one-batch-out; every paired difference has a CI containing 0). $\neff$ organises accuracy and calibration better than the two tuning knobs, with the accuracy optimum near $\neff\approx6$--7 and the calibration optimum near $\neff\approx35$--50. Calibration-tuned retrieval gives 95\% intervals with coverage 0.94 without correction, whereas kNN-type baselines stay overconfident at every training size tested. Post-hoc corrections need roughly 50 or more training droplets. Model behaviour tracks data coverage along concentration, and no physical association with glycerol (0--10\%) was detectable with 32 batches.
+\sect{Not established.} A $b+c/\neff$ variance law; a $\ln n$ law for the best $\beta$; any effect of Peclet or Marangoni numbers or particle type (untested); generality beyond this single dataset.
+\sect{Source of every number.} The printed outputs of your own runs of the layer scripts. If you rerun a script, check the affected page.
+\end{multicols}
+\clearpage
+
+% ================================================================== FIG 1
+\begin{figpage}{fig1_neff_heatmap.png}{Figure 1. Effective sample size across the two controls}
+{layer1\_outputs/fig1\_neff\_heatmap.png \quad (Layer 1)}{\color{gsup}Poster B: supporting}
+\sect{Key numbers.}\begin{itemize}\item Grid: 7 values of $k$ (3 to 100) $\times$ 8 of $\beta$ (0.25 to 32) = 56 settings; 142 held-out droplets, 32 batches.\item Best-accuracy setting $k=9,\beta=2$ has $\neff=6.19$; best-calibration (lowest NLL) $k=64,\beta=0.5$ has $\neff=49.08$.\end{itemize}
+\begin{multicols}{2}
+\sect{Purpose.} Show, before any accuracy result, what the two tuning knobs do to the model's internal state, summarised by one number.
+\sect{How it was produced.} \texttt{layer1\_bridge\_variable.py} runs leave-one-batch-out. In each fold the model is fitted on 31 batches and, for each of the 56 settings, returns the retrieval weights of every held-out droplet. $\neff$ is computed per droplet and averaged per setting. Colour is $\log_{10}$ of that mean; the printed number is the mean itself.
+\sect{Method.} $\neff=1/\sum_iw_i^2=Z(1)^2/Z(2)$ with $Z(b)=\sum_ie^{b\ell_i}$ and $\ell_i=-\beta d_i/s$ the logits; the code checks that both forms agree. Always $1\le\neff\le k$. $\beta=0$ is excluded because with all logits tied the top-$k$ rule keeps every droplet and $k$ stops mattering.
+\sect{Reading it step by step.} (1) Along a row, raising $k$ lifts $\neff$ only at gentle $\beta$; at sharp $\beta$ the extra neighbours carry almost no weight, so the columns become identical. (2) Down a column, $\neff$ falls steadily with $\beta$. (3) Cells with similar numbers lie on a diagonal ridge: a small $k$ with gentle $\beta$ behaves like a large $k$ with sharp $\beta$.
+\sect{Interpretation.} The grid is over-parameterised: in each regime one knob does the work. That redundancy is what lets a one-dimensional search over $\neff$ (Figure 9) replace the two-dimensional grid search.
+\sect{Links.} Every dot in Figure 2 is one cell of this grid. Figure 9 inverts it: choose $\neff$, then solve for $\beta$.
+\sect{Likely questions.} \emph{Why not just tune $k$?} At sharp $\beta$, $k$ has no effect; at gentle $\beta$, $\beta$ barely matters; $\neff$ is what both control. \emph{Is $\neff$ new?} No, it is Kish's effective sample size. The contribution is using it as the organising variable.
+\sect{Caveats.} Means hide the spread between droplets: droplets in sparse regions get far fewer voters.
+\sect{Suggested caption.} \emph{Mean effective number of voting droplets across neighbour cutoff $k$ and sharpness $\beta$. Equal-$\neff$ settings lie on a diagonal ridge.}
+\end{multicols}
+\end{figpage}
+
+% ================================================================== FIG 2
+\begin{figpage}{fig2_collapse.png}{Figure 2. Accuracy, calibration and entropy collapse onto $\neff$}
+{layer1\_outputs/fig2\_collapse.png \quad (Layer 1)}{\color{gmain}Poster B: hero figure}
+\sect{Key numbers.} Grouped-CV $R^2$ of predicting each diagnostic on held-out $k$ values, from $\log\neff$ alone vs from $(\log k,\log\beta)$:\par\smallskip
+{\small\begin{tabular}{@{}lccccccc@{}}\hline & $R^2$ & MAE & NLL & mean $z^2$ & cov68 & cov95 & entropy\\\hline
+$\log\neff$ alone & 0.78 & 0.83 & 0.93 & 0.93 & 0.97 & 0.98 & 0.99\\
+$\log k+\log\beta$ & 0.52 & 0.63 & 0.82 & 0.83 & 0.96 & 0.94 & 0.97\\\hline\end{tabular}}\hfill
+\begin{minipage}[t]{0.5\linewidth}\raggedright Held-out $\beta$ gives the same ordering (0.80, 0.88, 0.93, 0.93, 0.97, 0.98, 0.99 vs 0.48, 0.60, 0.91, 0.91, 0.86, 0.88, 0.91). Best accuracy at $\neff\approx6$ ($R^2=0.812$, MAE 0.169); best calibration at $\neff\approx49$ (cov 0.67/0.93, NLL 0.102).\end{minipage}
+\begin{multicols}{2}
+\sect{Purpose.} Test the central claim: accuracy, calibration and entropy are not independent properties but different functions of one variable.
+\sect{How it was produced.} For each of the 56 settings the 142 held-out predictions give $R^2$, MAE, NLL, coverage-68, mean $z^2$ and mean entropy $H$. The bridge test then fits a small polynomial ridge model (degree 2, penalty 0.01) to predict each diagnostic from $\log\neff$, $\log k$, $\log\beta$, or both knobs, and scores it on whole held-out values of $k$ (and separately of $\beta$) so neighbouring settings cannot leak.
+\sect{Method.} The 2-knob model has more parameters, so if $\log\neff$ alone matches or beats it, the comparison is conservative, not flattering. Marker colour is $\log_{10}\beta$ and size grows with $\sqrt k$: a collapse means colours and sizes do not separate into families.
+\sect{Reading it step by step.} Accuracy panels: error is lowest at small $\neff$ and rises when many droplets are averaged. NLL, coverage and $z^2$ improve with $\neff$ and level off. Entropy rises almost linearly in $\log\neff$.
+\sect{Interpretation.} With few voters the prediction is noisy and the neighbours' spread underestimates the error, since a few labels can agree by chance. With many voters the mean is over-smoothed (bias) but the spread is a more honest uncertainty. This is why the accuracy and calibration optima sit at different $\neff$.
+\sect{Links.} Figure 3: why entropy is near-definitional. Figure 4: the failed variance law. Figure 5: the honest version of the best-of-grid accuracy. Figure 7: coverage by $\neff$ quartile.
+\sect{Likely questions.} \emph{Is the best accuracy optimistic?} Yes, by 0.013 (Figure 5). \emph{What does $\neff$ add over $k$ and $\beta$?} It predicts held-out settings better with fewer parameters.
+\sect{Caveats.} NLL depends on the 5\% floor; one dataset; the entropy panel is not independent evidence.
+\sect{Suggested caption.} \emph{Each dot is one $(k,\beta)$ setting. Accuracy, calibration and entropy fall on a single curve in $\neff$; the accuracy optimum ($\neff\approx6$) and calibration optimum ($\neff\approx50$) differ.}
+\end{multicols}
+\end{figpage}
+
+% ================================================================== FIG 3
+\begin{figpage}{fig3_entropy_vs_neff.png}{Figure 3. Entropy against $\log\neff$}
+{layer1\_outputs/fig3\_entropy\_vs\_neff.png \quad (Layer 1)}{\color{gapp}Appendix only}
+\sect{Key numbers.}\begin{itemize}\item Correlation of $\log\neff$ with Shannon entropy $H$ over all (droplet, setting) pairs: 0.992.\item Entropy $R^2$ from $\log\neff$ alone in the Figure 2 bridge test: 0.99.\end{itemize}
+\begin{multicols}{2}
+\sect{Purpose.} Check that the entropy panel in Figure 2 is as tight as it should be, and show why it carries no independent weight.
+\sect{How it was produced.} Every held-out droplet at every setting contributes one point: $H=-\sum_iw_i\ln w_i$ against $\ln\neff$. The dashed line is $H=\ln\neff$.
+\sect{Method.} The Renyi entropy of order 2 is $H_2=-\ln\sum_iw_i^2=\ln\neff$. Renyi entropies are non-increasing in their order, so $H_2\le H_1=H$. Every point therefore lies on or above the line. The two coincide exactly when the weights are uniform, where both equal $\ln k$.
+\sect{Reading it step by step.} Points hugging the line are droplets with nearly equal weights. Points far above it have a few large weights and a long tail of small ones, so Shannon entropy sees the tail while $\neff$ discounts it.
+\sect{Interpretation.} $\neff$ and entropy are two summaries of one weight distribution. The correlation of 0.99 is a property of the mathematics, not a finding about the data.
+\sect{Links.} Figure 2 (entropy panel); the retrieval weights are the same object throughout.
+\sect{Likely questions.} \emph{Why use $\neff$ and not entropy?} They rank settings almost identically. $\neff$ is the equivalent number of equal votes, and it appears directly in the variance of a weighted mean (Kish).
+\sect{Caveats.} A reviewer would call it circular if offered as evidence for the bridge claim, so use it only as a code sanity check or in an appendix.
+\sect{Suggested caption.} \emph{Shannon entropy of the retrieval weights against $\ln\neff$; $\neff$ is the exponential of the order-2 Renyi entropy, so the points lie on or above the dashed line.}
+\end{multicols}
+\end{figpage}
+
+% ================================================================== FIG 4
+\begin{figpage}{fig4_variance_law.png}{Figure 4. The assumed variance law does not hold}
+{layer1\_outputs/fig4\_variance\_law.png \quad (Layer 1)}{\color{gneg}Negative result}
+\sect{Key numbers.}\begin{itemize}\item Fitted line: MSE $=0.0602-0.0045/\neff$, $R^2=0.010$; the slope has the wrong sign.\item The MSE minimum is at $\neff\approx6$ (Figure 2); MSE rises on both sides.\end{itemize}
+\begin{multicols}{2}
+\sect{Purpose.} Test a simple theoretical expectation for how error depends on $\neff$.
+\sect{How it was produced.} MSE and mean $\neff$ for each of the 56 settings; ordinary least squares of MSE on $1/\neff$.
+\sect{Method.} If labels had independent noise of variance $\sigma_\epsilon^2$, the variance of the retrieved mean would be $\sigma_\epsilon^2\sum_iw_i^2=\sigma_\epsilon^2/\neff$, and adding a constant bias floor gives $\mathrm{MSE}=b+c/\neff$ with $c>0$. Points would lie on a rising line in $1/\neff$.
+\sect{Reading it step by step.} At the right edge (small $\neff$, large $1/\neff$) the error is high because few droplets vote. Moving left, MSE falls, as the law predicts. Further left (large $\neff$) MSE rises again, which the law cannot produce: the fitted slope is negative.
+\sect{Interpretation.} The bias is not constant. Averaging more droplets pulls in neighbours whose labels differ, so bias grows with $\neff$. A better form would be $\mathrm{MSE}(\neff)=\mathrm{bias}^2(\neff)+\sigma_\epsilon^2/\neff$ with a rising bias term; this was not tested.
+\sect{Links.} The U-shape here is the same U-shape as the accuracy panels of Figure 2.
+\sect{Likely questions.} \emph{Is the variance theory wrong?} The $\sigma^2/\neff$ part is standard. What fails is the constant bias floor. \emph{Why report a failure?} It shows what was tried and keeps the claims honest.
+\sect{Caveats.} One dataset, one fit over the whole grid. A narrower range of $\neff$ might look linear in $1/\neff$.
+\sect{Suggested wording.} \emph{A simple bias-variance law MSE $=b+c/\neff$ did not describe the data ($R^2=0.01$); error is U-shaped in $\neff$.}
+\end{multicols}
+\end{figpage}
+
+% ================================================================== FIG 5
+\begin{figpage}{fig5_nested_cv.png}{Figure 5. Honest (nested) accuracy and the stability of tuning}
+{layer2\_outputs/fig5\_nested\_cv.png \quad (Layer 2)}{\color{gmain}Poster B: main}
+\sect{Key numbers.}\par\smallskip{\small\begin{tabular}{@{}lccc@{}}\hline Policy (outer LOEGO) & $R^2$ & 95\% CI & cov68 / cov95\\\hline
+global mean & $-0.066$ & [$-0.231$, $-0.064$] & 0.50 / 0.97\\ best-of-grid ($k{=}9,\beta{=}2$), optimistic & 0.812 & [0.680, 0.881] & 0.51 / 0.78\\
+nested, accuracy & 0.798 & [0.665, 0.871] & 0.54 / 0.75\\ nested, accuracy + 1-SE & 0.775 & [0.636, 0.850] & 0.59 / 0.88\\
+nested, calibration & 0.742 & [0.597, 0.831] & 0.69 / 0.93\\ legacy raw-space inner scoring & 0.802 & [0.672, 0.875] & 0.47 / 0.72\\\hline\end{tabular}}\hfill
+\begin{minipage}[t]{0.38\linewidth}\raggedright Selection optimism $+0.013$; effect of the scoring fix $-0.004$. Distinct settings chosen across 32 folds: 10 (accuracy), 9 (1-SE), 6 (calibration).\end{minipage}
+\begin{multicols}{2}
+\sect{Purpose.} Report accuracy the way it would hold on a new batch, and measure how much choosing the settings flatters the score.
+\sect{How it was produced.} \texttt{layer2\_nested\_cv.py}. In each of the 32 outer folds an inner 5-fold GroupKFold on the remaining batches scores all 56 settings; a policy picks one; the outer held-out batch is predicted with it. The outer predictions are pooled for $R^2$. Intervals come from 1000 batch-bootstrap resamples.
+\sect{Method.} \emph{Accuracy:} lowest inner MSE. \emph{1-SE:} among settings within one standard error of the best inner MSE, take the one with the largest $\neff$ (more averaging). \emph{Calibration:} lowest inner NLL. \emph{Legacy:} lowest inner MSE computed on raw concentration while the outer score is on $\log_{10}$, the mismatch that was found and fixed. Best-of-grid ignores nesting and picks the best outer score, hence the optimism.
+\sect{Reading it step by step.} Left: compare the orange bar with the first green bar; the gap is the cost of tuning. Right: darker cells were chosen in more folds; the accuracy rule mostly picks $k=5$--16 and $\beta=0.25$--2.
+\sect{Interpretation.} The accuracy optimum is flat: many nearby settings score almost the same, so different folds choosing different ones does not hurt. That is also why the optimism is only 0.013.
+\sect{Links.} The settings chosen sit near $\neff\approx7$ (mean 7.7), the optimum of Figure 2. Figure 9 reduces the 2-D search to 1-D.
+\sect{Likely questions.} \emph{Why not report 0.812?} It used the answers to pick the setting. \emph{Why do the picks vary?} Flat optimum; selection noise is harmless here.
+\sect{Caveats.} All intervals overlap heavily, so differences between the green bars are not resolvable with 32 batches. The bug fix made no measurable difference. The grid was chosen while looking at this dataset.
+\sect{Suggested caption.} \emph{Nested leave-one-batch-out accuracy ($R^2=0.80$) is within 0.013 of the optimistic best-of-grid value; the accuracy optimum is flat across $(k,\beta)$.}
+\end{multicols}
+\end{figpage}
+
+% ================================================================== FIG 6
+\renewcommand{\fh}{56mm}
+\begin{figpage}{fig6_scaling_law.png}{Figure 6. How $\neff$ and the best $\beta$ depend on training size}
+{layer3\_outputs/fig6\_scaling\_law.png \quad (Layer 3)}{\color{gsup}Poster B: optional}
+\sect{Key numbers.}\par\smallskip{\small\begin{tabular}{@{}lcc@{}}\hline & adaptive scale & fixed scale\\\hline
+fitted law $\neff/n=\;$ & $0.515\,e^{-0.403\beta}$, $R^2=0.80$ & $0.549\,e^{-0.266\beta}$, $R^2=0.86$\\
+$c$ (95\% CI) & 0.403 [0.393, 0.439] & 0.266 [0.260, 0.299]\\
+$\neff^*$ at accuracy optimum & 7.5 [5.6, 11.3] & 7.3 [5.3, 12.2]\\
+growth exponent $\gamma$ of $\neff^*\propto n^\gamma$ & 0.18 [$-$0.21, 0.74] & 0.07 [$-$0.42, 0.76]\\
+out-of-sample error: flat / constant-$\neff^*$ / power law & 0.16 / 0.76 / 0.56 & 0.54 / 0.35 / 0.19\\
+gain over flat null (95\% CI) & $-0.61$ [$-0.95$, $+0.03$] & $+0.18$ [$-0.83$, $+0.72$]\\\hline\end{tabular}}\par
+Best $\beta$: about 2.0--3.3 (adaptive) vs 2.8 rising to 6.1 (fixed). $\beta$ meeting 95\% coverage: 0.8--1.0 (adaptive), 0.95--1.7 (fixed).
+\begin{multicols}{2}
+\sect{Purpose.} Test whether the picture from Layer 1 is stable as data grow, and whether the best $\beta$ can be predicted from the training size.
+\sect{How it was produced.} \texttt{layer3\_scaling\_law.py}. In each outer fold the training batches are subsampled to 20, 30, 40, 50, 65, 80 and 100\% (4 random draws each, 1 at 100\%), giving 27 to 138 droplets. All voters are allowed ($k$ unrestricted), so $\beta$ is the only control (14 values, 0.25 to 32). CIs resample held-out batches (300 times). Two length scales: \emph{adaptive} (Layer 0's median nearest-neighbour distance, which shrinks as the stored set grows) and \emph{fixed} (that distance on a 20-droplet reference sample, independent of $n$).
+\sect{Method.} Law: $\ln(\neff/n)=\ln A-c\beta$ by least squares on points with $\neff\ge2$. If the accuracy optimum has constant $\neff^*$, then $\beta^*(n)=\frac1c\ln(An/\neff^*)$; a variant lets $\neff^*=e^{g_0}n^\gamma$. Both are fitted on the 4 smallest sizes and scored on the 3 largest by $\overline{|\ln\beta^*_{\rm pred}-\ln\beta^*_{\rm obs}|}$, against a null of constant $\beta^*$.
+\sect{Reading it step by step.} Left: larger $n$ lies lower (a smaller share of the store votes); curves are parallel until $\neff$ hits its floor near 1, where the dashed exponential no longer applies. Middle: green dots are the observed accuracy optimum, orange squares the $\beta$ where 95\% coverage is first met, triangles the predictions. Right: a constant curve would mean a constant $\neff^*$.
+\sect{Interpretation.} The adaptive scale shrinks with $n$, which sharpens a fixed $\beta$ in absolute distance and can hide any $n$-dependence; the fixed scale removes this and $\beta^*$ then rises, but not significantly.
+\sect{Links.} Figure 8 uses the same subsampling; Figure 1 gives the same law at full size.
+\sect{Likely questions.} \emph{Why not state $\beta^*\propto\ln n$?} The gain CIs include 0. \emph{Is $c$ a physical constant?} No: 0.40 vs 0.27 under two normalisations.
+\sect{Caveats.} Subsets share droplets, so levels are not independent. Law valid for moderate $\beta$ only. Do not extrapolate to larger $n$.
+\sect{Suggested caption.} \emph{$\neff/n$ decays exponentially in $\beta$; the accuracy optimum sits near $\neff\approx7$ at every training size; a trend in the best $\beta$ is not resolved with 32 batches.}
+\end{multicols}
+\end{figpage}
+\renewcommand{\fh}{62mm}
+
+% ================================================================== FIG 7
+\renewcommand{\fh}{54mm}
+\begin{figpage}{fig7_recalibration.png}{Figure 7. Where the uncertainty is wrong, and the fixes}
+{layer2b\_outputs/fig7\_recalibration.png \quad (Layer 2b)}{\color{gmain}Poster B: main}
+\sect{Key numbers.}\par\smallskip{\small\begin{tabular}{@{}lcccc@{}}\hline Model (nested LOEGO) & $R^2$ [95\% CI] & raw cov68 / cov95 & after sigma & factor\\\hline
+retrieval, accuracy & 0.798 [0.665, 0.871] & 0.54 / 0.75 & 0.87 / 0.94 & 3.1\\ retrieval, calibration & 0.742 [0.597, 0.831] & 0.69 / 0.93 & 0.67 / 0.93 & 1.0\\
+plain kNN & 0.790 [0.649, 0.866] & 0.51 / 0.68 & 0.86 / 0.94 & 4.6\\ density-weighted kNN & 0.792 [0.663, 0.866] & 0.49 / 0.74 & 0.85 / 0.95 & 4.7\\
+density kNN, own scoring & 0.821 [0.704, 0.883] & 0.52 / 0.75 & --- & ---\\\hline\end{tabular}}\par\smallskip
+Accuracy setting: slope of truth on prediction 1.020 (CI 0.868 to 1.153), mean $z^2=17.7$. By $\neff$ quartile (mean $\neff$; cov68 / cov95; mean $z^2$): Q1 (3.7) 0.42 / 0.61, 44.2; Q2 (5.0) 0.46 / 0.71, 21.8; Q3 (7.4) 0.69 / 0.89, 2.0; Q4 (14.3) 0.61 / 0.78, 2.3. After bias fix: $R^2$ 0.805 (accuracy), 0.780 (calibration), 0.792 (kNN), 0.795 (density). Paired $R^2$ gap vs density kNN: $-0.022$ [$-0.073$, $+0.019$].
+\begin{multicols}{2}
+\sect{Purpose.} Find where the model's stated uncertainty fails and whether simple fixes repair it.
+\sect{How it was produced.} \texttt{layer2b\_recalibration.py}. All models use the same nested folds. For each, a setting is chosen by the inner loop, then the sigma factor and the bias line are fitted on the inner out-of-fold predictions and applied to the held-out batch. The density kNN is the baseline of your pipeline (weights = local density / distance) run on the same folds, scored both in log space and by its own raw-space averaging.
+\sect{Method.} Sigma factor $s=\sqrt{\overline{z^2}}$ clipped to $[0.5,5]$. Bias slope tested by regressing truth on prediction, with a batch-bootstrap CI. Plain kNN is retrieval with $\beta\approx0$, i.e. equal weights on the $k$ nearest.
+\sect{Reading it step by step.} Left: scatter of error against truth; a downward trend is expected from noisy predictions and is not itself a bias. Middle: a histogram wider than the bell curve means intervals are too narrow, and long tails mean a few predictions are badly overconfident. Right: bars should reach the dotted lines.
+\sect{Interpretation.} The accuracy setting is overconfident mostly at low $\neff$: with few voters the labels can agree by chance, so the spread underestimates the error. One width factor repairs 95\% coverage but overshoots 68\% (0.87), because the errors are heavy-tailed.
+\sect{Links.} Figure 8 repeats this at different training sizes; Figure 9's calibration-targeted policy needs no factor.
+\sect{Likely questions.} \emph{Is plain kNN overconfident too?} Yes, more so (factor 4.6). \emph{Does the bias fix help?} Not for the accuracy setting (slope 1.02); only for the calibration setting (slope 1.2).
+\sect{Caveats.} Density-kNN and kNN factors sit at the cap of 5 in many folds, so corrected coverage is a floor. Accuracy differences are not resolvable. NLL is floor-dependent, so quote coverage.
+\sect{Suggested caption.} \emph{The accuracy-tuned model's 95\% intervals cover 75\% of true values, worst at low $\neff$; one width factor restores 94\%.}
+\end{multicols}
+\end{figpage}
+\renewcommand{\fh}{62mm}
+
+% ================================================================== FIG 8
+\renewcommand{\fh}{54mm}
+\begin{figpage}{fig8_correction_scaling.png}{Figure 8. How the corrections depend on training size}
+{layer3b\_outputs/fig8\_correction\_scaling.png \quad (Layer 3b)}{\color{gsup}Poster B: supporting}
+\sect{Key numbers.}\begin{itemize}
+\item Slope IQR (accuracy setting): 0.55 at $n=27$, 0.24 at 40, 0.13 at 71, 0.05 at 111. Median slope 0.93--1.02 at every size for accuracy, kNN and density kNN; the calibration setting settles near 1.2 (1.38 at $n=40$).
+\item $R^2$ after the bias fix at $n=27$: $-0.115$ (accuracy), $-0.547$ (calibration), $-0.085$ (kNN), $-0.096$ (density), against 0.54--0.65 raw. From $n\approx55$ the change is within about $\pm0.03$; only the calibration setting gains ($+0.01$ to $+0.05$).
+\item Sigma factor: calibration $\approx1.0$ from $n=53$ (1.42 at 27); accuracy 3.2--3.8; kNN and density at the cap of 5 in 56--74\% of fits up to $n=111$, 19--25\% at 138.
+\item Raw 95\% coverage by model: calibration 0.90--0.96 at every size; accuracy 0.66--0.78; kNN 0.56--0.71; density 0.53--0.72. Raw $R^2$ at $n=27\to138$: 0.65$\to$0.81 (accuracy), 0.54$\to$0.75 (calibration), 0.62$\to$0.80 (kNN), 0.60$\to$0.79 (density).\end{itemize}
+\begin{multicols}{2}
+\sect{Purpose.} Learn how much data are needed before the Layer 2b corrections can be trusted.
+\sect{How it was produced.} \texttt{layer3b\_correction\_scaling.py}. One fixed setting per model (accuracy $k{=}9,\beta{=}2$; calibration $k{=}100,\beta{=}1$; kNN $k{=}5$; density kNN $k{=}5$). Each outer fold trains on a random 20--100\% of the training batches (3 draws), runs an inner 5-fold on that subset to fit the corrections, applies them to the held-out batch, and pools over folds.
+\sect{Method.} The fitted bias slope is $b=\mathrm{Cov}(\hat y,y)/\mathrm{Var}(\hat y)$ on out-of-fold predictions; with few droplets both terms are noisy and $\hat y$ has little spread, so $b$ is unstable. The panels show median values with an interquartile band.
+\sect{Reading it step by step.} Top left: a narrowing band means the slope is learnable. Top right: lines on the dotted cap at 5 mean the factor is saturated. Bottom left: solid above dashed means the fix helped coverage. Bottom right: solid below dashed means the fix hurt accuracy.
+\sect{Interpretation.} Below about 50 droplets the fitted line is dominated by noise, so applying it can destroy predictions that were fine. The calibration setting stays calibrated at every size, so it never needs the fix.
+\sect{Links.} Figure 7 is the 100\% case; Figure 6 uses the same subsampling.
+\sect{Likely questions.} \emph{Could shrinkage help?} Probably: blending the fitted line toward no correction by $n/(n+n_0)$ was suggested, not tested.
+\sect{Caveats.} At 100\% the outer folds share almost all their data, so the spread there is understated. The settings were fixed from earlier analysis of this dataset, so the largest-size numbers carry mild optimism. The cap compresses the kNN spread.
+\sect{Suggested caption.} \emph{Corrections fitted on fewer than about 50 droplets are unreliable; calibration-tuned retrieval stays calibrated at every size.}
+\end{multicols}
+\end{figpage}
+\renewcommand{\fh}{62mm}
+
+% ================================================================== FIG 9
+\renewcommand{\fh}{54mm}
+\begin{figpage}{fig9_neff_policy.png}{Figure 9. Searching a target $\neff$ instead of a $(k,\beta)$ grid}
+{layer2c\_outputs/fig9\_neff\_policy.png \quad (Layer 2c)}{\color{gsup}Poster B: supporting}
+\sect{Key numbers.}\par\smallskip{\small\begin{tabular}{@{}lcccc@{}}\hline Policy & $R^2$ [95\% CI] & raw cov68 / cov95 & after bias+sigma $R^2$ & distinct\\\hline
+grid accuracy & 0.798 [0.665, 0.871] & 0.54 / 0.75 & 0.805 & 10\\ grid 1-SE & 0.775 [0.636, 0.850] & 0.59 / 0.88 & 0.796 & 9\\ grid calibration & 0.742 [0.597, 0.831] & 0.69 / 0.93 & 0.780 & 6\\
+$\neff$ accuracy & 0.791 [0.650, 0.868] & 0.54 / 0.83 & 0.799 & 4\\ $\neff$ 1-SE & 0.758 [0.612, 0.846] & 0.62 / 0.92 & 0.786 & 5\\ $\neff$ calibration & 0.742 [0.598, 0.832] & 0.70 / 0.94 & 0.779 & 3\\
+fixed $\neff=7$ & 0.805 [0.670, 0.880] & 0.52 / 0.79 & 0.803 & 1\\ fixed $\neff=35$ & 0.752 [0.605, 0.844] & 0.70 / 0.94 & 0.768 & 1\\\hline\end{tabular}}\par
+Paired $R^2$ differences: $\neff$ accuracy $-$ grid accuracy $-0.008$ [$-0.036$, $+0.014$]; $\neff$ 1-SE $-$ grid 1-SE $-0.017$ [$-0.070$, $+0.016$]; $\neff$ calibration $-$ grid calibration $0.000$ [$-0.012$, $+0.011$]; fixed 7 $-$ grid accuracy $+0.006$ [$-0.012$, $+0.025$]; fixed 35 $-$ grid calibration $+0.010$ [$-0.006$, $+0.025$].
+\begin{multicols}{2}
+\sect{Purpose.} Test whether a single interpretable control, the target $\neff$, can replace the two-dimensional $(k,\beta)$ search.
+\sect{How it was produced.} \texttt{layer2c\_neff\_policy.py}. For each training set, the mean $\neff$ is computed on a grid of 80 values of $\ln\beta$ using only training droplets queried against droplets of other batches, so it uses no labels and no test data. For a target $t\in\{3,5,7,10,15,25,35,50\}$ the code interpolates the $\beta$ that gives $\neff=t$. The inner loop then picks the target with the same criteria as Figure 5; the fixed policies skip the search and use 7 or 35.
+\sect{Method.} All voters are allowed ($k$ unrestricted). Because $\beta$ is re-solved for every training set, the same target adapts automatically to the training size. The corrections of Layer 2b are fitted on the inner out-of-fold predictions of the chosen setting.
+\sect{Reading it step by step.} Left: bars of similar length with overlapping whiskers mean accuracy is tied. Middle: bars reaching the dotted lines are calibrated; the $\neff\approx35$ policies get there with no correction. Right: fewer distinct settings means more consistent choices.
+\sect{Interpretation.} The accuracy and calibration optima are each roughly a fixed $\neff$ (about 7 and 35), so naming a target is a simpler description than naming $(k,\beta)$. After the corrections all policies converge.
+\sect{Links.} Figure 1 (the ridge that makes this possible), Figure 5 (grid policies), Figure 6 (the optimum near 7).
+\sect{Likely questions.} \emph{Is the stability real?} The $\neff$ policies search 8 targets against 56 settings, so fewer distinct picks is partly the smaller grid; the 29 of 32 folds choosing 35 under $\neff$ calibration is the cleaner evidence.
+\sect{Caveats.} The two fixed targets came from earlier analysis of this dataset (mild optimism). $\neff$ policies use all voters, while the grid can truncate $k$, so part of the coverage gain (0.75$\to$0.83) may come from that. NLL is floor-dependent.
+\sect{Suggested caption.} \emph{Selecting a target $\neff$ matches the $(k,\beta)$ grid on accuracy and calibration; $\neff\approx35$ gives calibrated 95\% intervals without correction.}
+\end{multicols}
+\end{figpage}
+\renewcommand{\fh}{62mm}
+
+% ================================================================== FIG 10
+\begin{figpage}{fig10_density_landscape.png}{Figure 10. Landscape of the retrieval model (density, prediction, $\neff$, energy)}
+{landscape\_outputs/fig10\_density\_landscape.png \quad (landscape script)}{\color{gfix}Needs a rerun and layout fix}
+\sect{Key numbers.}\begin{itemize}\item Not yet run on your database. The script prints three numbers to add here: the share of variance captured by the two axes, the correlation of each axis with log concentration, and the share of the slice with $\neff<3$.\item If the two axes capture under about 40\% of the variance, the slice may mislead and a different projection would be fairer.\end{itemize}
+\begin{multicols}{2}
+\sect{Purpose.} Give a picture of the model's memory: where stored droplets crowd together, where predictions are sharp, and where few droplets vote.
+\sect{How it was produced.} \texttt{layer\_landscape.py} fits the model on all 142 droplets, takes the plane of the two directions of greatest droplet variation (PC1, PC2), lays a 170$\times$170 grid on it, maps each grid point back into the full 40-dimensional space, and computes distances to every stored droplet in all 40 dimensions.
+\sect{Method.} Log-density $L(\xi)=\ln\sum_ie^{-\beta d_i/s}$; energy $E=-L/\beta$; prediction $\mu(\xi)=\sum_iw_iy_i$; $\neff(\xi)=1/\sum_iw_i^2$. Axes are in units of the typical nearest-neighbour distance.
+\sect{Reading it step by step.} Top row: as $\beta$ rises, one broad hill breaks into separate basins around individual droplets. Bottom left: colour is the answer the model would give at each point. Bottom middle: dark regions have few voters; the $\neff=7$ contour marks the accuracy optimum. Bottom right: energy is the density map upside-down.
+\sect{Interpretation (expected, to be checked).} Sparse regions (high concentration, per Figure 12) should appear as low-$\neff$, shallow-density areas. This is a hypothesis to confirm on the real output, not a result.
+\sect{Links.} Figure 1 (what $\beta$ does), Figure 7 (quartile table shows low-$\neff$ overconfidence), Figure 12 (isolation rises with concentration).
+\sect{Likely questions.} \emph{Is a 2-D slice faithful?} Only to the extent PC1 and PC2 capture the variance; droplets off the plane look weaker than they are. \emph{Does density predict error?} Not claimed here.
+\sect{Caveats.} Descriptive, fitted on all data, no accuracy claim. In the last test render the axis labels overlapped and the slice was narrow, so fix and recheck before printing.
+\sect{Suggested caption.} \emph{Two-dimensional slice through the 40-dimensional feature space: sharper $\beta$ turns one broad density hill into separate basins; dark regions of the $\neff$ map have few voting droplets.}
+\end{multicols}
+\end{figpage}
+
+% ================================================================== FIG 11
+\begin{figpage}{fig11_energy_surface_3d.png}{Figure 11. Three-dimensional energy surface}
+{landscape\_outputs/fig11\_energy\_surface\_3d.png \quad (landscape script)}{\color{gfix}Needs a rerun}
+\sect{Key numbers.}\begin{itemize}\item No real-data values yet; report the same slice statistics as Figure 10.\item The two panels use $\beta=1$ (broad valley) and $\beta=4$ (sharper valleys), spanning the calibration and accuracy regions of Layers 1 and 2.\end{itemize}
+\begin{multicols}{2}
+\sect{Purpose.} A single image that conveys, to a non-specialist, what the sharpness knob does to the model's memory.
+\sect{How it was produced.} The same slice and grid as Figure 10; the energy $E=-L/\beta$ (shifted so the deepest point is 0) is drawn as a surface at two values of $\beta$.
+\sect{Method.} Because $E=-\tfrac1\beta\ln\sum_ie^{-\beta d_i/s}$, as $\beta\to\infty$ it tends to the distance to the nearest stored droplet (a landscape of cones), and as $\beta\to0$ it flattens toward the average distance (one broad bowl).
+\sect{Reading it step by step.} Valleys sit where stored droplets are; height is how far a point is from the stored droplets in the model's own distance. A deeper, narrower valley means one droplet dominates a prediction.
+\sect{Interpretation.} The limit statement above is exact; how closely the real surface follows it depends on the data and is for the rerun to show.
+\sect{Links.} Figure 10 gives the same slice as maps; Figure 1 gives the numbers behind the sharpening.
+\sect{Likely questions.} \emph{Does the height mean anything quantitative?} Only relative to the typical nearest-neighbour distance. \emph{Is this a Hopfield energy?} It is the log-sum-exp energy used by modern Hopfield networks, with a distance kernel.
+\sect{Caveats.} Illustrative: a slice of a 40-dimensional space, fitted on all data, no accuracy claim. Its value is explanatory; it adds no new evidence.
+\sect{Suggested caption.} \emph{Energy surface $E=-L/\beta$ on the top-two-PC slice at two sharpness values; valleys are where stored droplets sit.}
+\end{multicols}
+\end{figpage}
+
+% ================================================================== FIG 12
+\renewcommand{\fh}{54mm}
+\begin{figpage}{fig12_physical_grounding.png}{Figure 12. Does the model's behaviour track the physics?}
+{layer4\_outputs/fig12\_physical\_grounding.png \quad (Layer 4)}{\color{gsup}Poster B: supporting / limitation}
+\sect{Key numbers.}\par\smallskip{\small\begin{tabular}{@{}llccc@{}}\hline Behaviour & Physical variable & $\rho$ [95\% CI] & Holm $p$ & verdict\\\hline
+isolation & $\log_{10}$ conc & $+0.78$ [0.57, 0.92] & 0.002 & association\\ $\neff$ (cal.) & $\log_{10}$ conc & $-0.35$ [$-0.65$, 0.00] & 0.55 & inconclusive\\
+$\neff$ (acc.) & $\log_{10}$ conc & $-0.27$ [$-0.58$, 0.10] & 1.0 & inconclusive\\ error (cal.) & $\log_{10}$ conc & $+0.22$ [$-0.13$, 0.54] & 1.0 & inconclusive\\
+local decay $c$ & $\log_{10}$ conc & $+0.24$ [$-0.12$, 0.55] & 1.0 & inconclusive\\ $\neff$ (cal.) & glycerol & $-0.10$ [$-0.43$, 0.27] & 1.0 & no effect $\ge$ MDE\\
+error (cal.) & glycerol & $-0.15$ [$-0.47$, 0.23] & 1.0 & no effect $\ge$ MDE\\ other glycerol pairs & & $-0.16$ to $+0.17$ & 1.0 & inconclusive\\\hline\end{tabular}}\par
+Minimum detectable $|\rho|$ (80\% power, $\alpha=0.05$, 32 batches): 0.48. Kruskal-Wallis over 5 glycerol levels: $p\ge0.11$, effect size $\varepsilon^2$ up to 0.24. Ranges: glycerol 0 to 10\%; $\log_{10}$ concentration $-2.35$ to $-0.70$; all 32 batches parsed as polystyrene.
+\begin{multicols}{2}
+\sect{Purpose.} Ask whether the model's internal behaviour is explained by physical variables of the experiment, or only by how the data happen to cover feature space.
+\sect{How it was produced.} \texttt{layer4\_physical\_grounding.py}. For each held-out droplet (nested LOEGO) six behaviours are measured: $\neff$ at the accuracy and calibration settings, the local decay constant $c$ (minus the slope of $\ln\neff$ against $\beta$ on 0.25--8), isolation (distance to the nearest stored droplet over the typical neighbour distance), the error, and $|z|$. They are averaged per batch and correlated with each batch's physical values.
+\sect{Method.} Spearman $\rho$; 95\% CIs by resampling batches (1500 times); permutation $p$ (5000); Holm correction over the 12 numeric pairs; Kruskal-Wallis for glycerol levels. The minimum detectable $\rho$ is $\tanh\bigl((z_{0.975}+z_{0.8})/\sqrt{n-3}\bigr)=0.48$.
+\sect{Reading it step by step.} Each cell of the heat map is a rank correlation across 32 batches; a star means it survives Holm. Pale cells are weak, not necessarily absent: with a minimum detectable effect of 0.48, most pairs are inconclusive.
+\sect{Interpretation.} High-concentration batches have no similar droplets in the other batches, so leave-one-batch-out forces extrapolation: isolation climbs from about 1 to over 10. Isolation rising did not significantly raise the error, so extrapolation is detected by isolation but its cost is not yet shown.
+\sect{Links.} Figure 10 (the density map should show the sparse region); Figure 7 (low-$\neff$ overconfidence).
+\sect{Likely questions.} \emph{Is this physics?} No. Concentration is the target, so its link to isolation reflects dataset coverage. \emph{Why no Peclet or Marangoni?} No physics file was supplied; the script accepts one.
+\sect{Caveats.} Glycerol spans only 0--10\%. Particle type could not be tested (one level). Per-droplet $c$ is noisy.
+\sect{Suggested caption.} \emph{Batch-level isolation from stored droplets rises with concentration ($\rho=0.78$): high-concentration predictions are extrapolations. No glycerol association was detectable with 32 batches.}
+\end{multicols}
+\end{figpage}
+\renewcommand{\fh}{62mm}
+
+\end{document}

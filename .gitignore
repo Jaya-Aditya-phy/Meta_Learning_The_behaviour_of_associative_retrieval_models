@@ -1,0 +1,20 @@
+# data: never commit raw data, databases or images from experiments
+*.db
+*.sqlite
+*.sqlite3
+data/
+*.tif
+*.tiff
+# generated output
+outputs/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.venv/
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.toc
