@@ -23,8 +23,8 @@ of `n_eff` than of the two tuning knobs, and the accuracy optimum and the calibr
 ## Install and try it in two minutes
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/neff-retrieval
-cd neff-retrieval
+git clone https://github.com/Jaya-Aditya-phy/Meta_Learning_The_behaviour_of_associative_retrieval_models
+cd Meta_Learning_The_behaviour_of_associative_retrieval_models
 pip install -e ".[dev]"
 pytest                      # 14 tests, including a label-leakage check
 neffretrieval demo          # runs the first two analyses on a synthetic benchmark (no data needed)
